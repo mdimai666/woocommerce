@@ -351,6 +351,23 @@ const updateBusinessLocation = ( countryAndState: string ) => {
 	} );
 };
 
+const assignStoreLocation = assign( {
+	businessInfo: (
+		context: CoreProfilerStateMachineContext,
+		event: BusinessLocationEvent
+	) => {
+		return {
+			...context.businessInfo,
+			location: event.payload.storeLocation,
+		};
+	},
+} );
+
+const assignUserProfile = assign( {
+	userProfile: ( context, event: UserProfileEvent ) =>
+		event.payload.userProfile, // sets context.userProfile to the payload of the event
+} );
+
 const updateBusinessInfo = async (
 	_context: CoreProfilerStateMachineContext,
 	event: BusinessInfoEvent
@@ -420,8 +437,14 @@ const getPlugins = async () => {
 };
 
 const handlePlugins = assign( {
-	// @ts-expect-error -- seems to be a flakey type error, will need to investigate further
-	pluginsAvailable: ( _context, event ) => event.data,
+	pluginsAvailable: ( _context, event ) =>
+		( event as DoneInvokeEvent< Extension[] > ).data,
+} );
+
+const assignPluginsSelected = assign( {
+	pluginsSelected: ( _context, event: PluginsInstallationRequestedEvent ) => {
+		return event.payload.plugins.map( getPluginSlug );
+	},
 } );
 
 export const preFetchActions = {
@@ -441,6 +464,9 @@ const coreProfilerMachineActions = {
 	handleStoreNameOption,
 	handleStoreCountryOption,
 	assignOptInDataSharing,
+	assignStoreLocation,
+	assignPluginsSelected,
+	assignUserProfile,
 	handleCountries,
 	handleOnboardingProfileOption,
 	assignOnboardingProfile,
@@ -619,25 +645,11 @@ export const coreProfilerStateMachineDefinition = createMachine( {
 					on: {
 						USER_PROFILE_COMPLETED: {
 							target: 'postUserProfile',
-							actions: [
-								assign( {
-									userProfile: (
-										context,
-										event: UserProfileEvent
-									) => event.payload.userProfile, // sets context.userProfile to the payload of the event
-								} ),
-							],
+							actions: [ 'assignUserProfile' ],
 						},
 						USER_PROFILE_SKIPPED: {
 							target: 'postUserProfile',
-							actions: [
-								assign( {
-									userProfile: (
-										context,
-										event: UserProfileEvent
-									) => event.payload.userProfile, // assign context.userProfile to the payload of the event
-								} ),
-							],
+							actions: [ 'assignUserProfile' ],
 						},
 					},
 					exit: actions.choose( [
@@ -828,18 +840,7 @@ export const coreProfilerStateMachineDefinition = createMachine( {
 						BUSINESS_LOCATION_COMPLETED: {
 							target: 'postSkipFlowBusinessLocation',
 							actions: [
-								assign( {
-									businessInfo: (
-										_context,
-										event: BusinessLocationEvent
-									) => {
-										return {
-											..._context.businessInfo,
-											location:
-												event.payload.storeLocation,
-										};
-									},
-								} ),
+								'assignStoreLocation',
 								'recordTracksSkipBusinessLocationCompleted',
 							],
 						},
@@ -983,18 +984,7 @@ export const coreProfilerStateMachineDefinition = createMachine( {
 						},
 						PLUGINS_INSTALLATION_REQUESTED: {
 							target: 'installPlugins',
-							actions: [
-								assign( {
-									pluginsSelected: (
-										_context,
-										event: PluginsInstallationRequestedEvent
-									) => {
-								        return event.payload.plugins.map(
-									        getPluginSlug
-								        );
-                                    },
-								} ),
-							],
+							actions: [ 'assignPluginsSelected' ],
 						},
 					},
 					meta: {
@@ -1174,6 +1164,7 @@ export const CoreProfilerController = ( {
 	const augmentedStateMachine = useMemo( () => {
 		// When adding extensibility, this is the place to manipulate the state machine definition.
 		return coreProfilerStateMachineDefinition.withConfig( {
+			// @ts-expect-error -- flaky types?
 			actions: {
 				...coreProfilerMachineActions,
 				...actionOverrides,
