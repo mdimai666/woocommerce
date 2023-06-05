@@ -87,9 +87,7 @@ export function Editor( { product, settings }: EditorProps ) {
 											<PluginArea scope="woocommerce-product-block-editor" />
 										</>
 									}
-									footer={
-										<Footer productId={ product.id } />
-									}
+									footer={ <Footer product={ product } /> }
 								/>
 
 								<Popover.Slot />
