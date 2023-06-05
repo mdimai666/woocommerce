@@ -16,6 +16,7 @@ import { useEntityProp } from '@wordpress/core-data';
 import { getProductErrorMessage } from '../../../utils/get-product-error-message';
 import { recordProductEvent } from '../../../utils/record-product-event';
 import { usePublish } from '../hooks/use-publish';
+import { useFeedbackBar } from '../../../hooks/use-feedback-bar';
 
 export function PublishButton(
 	props: Omit< Button.ButtonProps, 'aria-disabled' | 'variant' | 'children' >
@@ -30,6 +31,8 @@ export function PublishButton(
 
 	const { createSuccessNotice, createErrorNotice } =
 		useDispatch( 'core/notices' );
+
+	const { showFeedbackBarIfNotPreviouslyHidden } = useFeedbackBar();
 
 	const publishButtonProps = usePublish( {
 		...props,
@@ -57,6 +60,8 @@ export function PublishButton(
 			};
 
 			createSuccessNotice( noticeContent, noticeOptions );
+
+			showFeedbackBarIfNotPreviouslyHidden();
 
 			if ( productStatus === 'auto-draft' ) {
 				const url = getNewPath( {}, `/product/${ savedProduct.id }` );

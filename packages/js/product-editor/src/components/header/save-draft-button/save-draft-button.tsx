@@ -15,6 +15,7 @@ import { useEntityProp } from '@wordpress/core-data';
 import { getProductErrorMessage } from '../../../utils/get-product-error-message';
 import { recordProductEvent } from '../../../utils/record-product-event';
 import { useSaveDraft } from '../hooks/use-save-draft';
+import { useFeedbackBar } from '../../../hooks/use-feedback-bar';
 
 export function SaveDraftButton(
 	props: Omit< Button.ButtonProps, 'aria-disabled' | 'variant' | 'children' >
@@ -28,6 +29,8 @@ export function SaveDraftButton(
 	const { createSuccessNotice, createErrorNotice } =
 		useDispatch( 'core/notices' );
 
+	const { showFeedbackBarIfNotPreviouslyHidden } = useFeedbackBar();
+
 	const saveDraftButtonProps = useSaveDraft( {
 		...props,
 		onSaveSuccess( savedProduct: Product ) {
@@ -36,6 +39,8 @@ export function SaveDraftButton(
 			createSuccessNotice(
 				__( 'Product saved as draft.', 'woocommerce' )
 			);
+
+			showFeedbackBarIfNotPreviouslyHidden();
 
 			if ( productStatus === 'auto-draft' ) {
 				const url = getNewPath( {}, `/product/${ savedProduct.id }` );
