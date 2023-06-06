@@ -29,7 +29,7 @@ export function SaveDraftButton(
 	const { createSuccessNotice, createErrorNotice } =
 		useDispatch( 'core/notices' );
 
-	const { showFeedbackBarIfNotPreviouslyHidden } = useFeedbackBar();
+	const { maybeShowFeedbackBar } = useFeedbackBar();
 
 	const saveDraftButtonProps = useSaveDraft( {
 		...props,
@@ -40,7 +40,7 @@ export function SaveDraftButton(
 				__( 'Product saved as draft.', 'woocommerce' )
 			);
 
-			showFeedbackBarIfNotPreviouslyHidden();
+			maybeShowFeedbackBar();
 
 			if ( productStatus === 'auto-draft' ) {
 				const url = getNewPath( {}, `/product/${ savedProduct.id }` );

@@ -32,7 +32,7 @@ export function PublishButton(
 	const { createSuccessNotice, createErrorNotice } =
 		useDispatch( 'core/notices' );
 
-	const { showFeedbackBarIfNotPreviouslyHidden } = useFeedbackBar();
+	const { maybeShowFeedbackBar } = useFeedbackBar();
 
 	const publishButtonProps = usePublish( {
 		...props,
@@ -61,7 +61,7 @@ export function PublishButton(
 
 			createSuccessNotice( noticeContent, noticeOptions );
 
-			showFeedbackBarIfNotPreviouslyHidden();
+			maybeShowFeedbackBar();
 
 			if ( productStatus === 'auto-draft' ) {
 				const url = getNewPath( {}, `/product/${ savedProduct.id }` );
